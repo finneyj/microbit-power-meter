@@ -12,6 +12,7 @@ namespace energymeter {
     let threshold = 500;    // the threshold in Watts where the device is determines to be "on".
     let onState = false;    // true if the ME field is large enough to determine a device to be "on". False otherwise.
     let dataTrace = false;  // true if power data is being streamd to the serial port. flase otherwise. 
+    let enabled = false;
 
     let onPowerOnHandler: () => void;
     let onPowerOffHandler: () => void;
@@ -24,6 +25,7 @@ namespace energymeter {
     //% block="set electrical power|threshold %t Watts"
     export function setElectricalPowerThreshold(t: number)
     {
+        enabled = true;
         threshold = t;
     }
 
@@ -32,9 +34,13 @@ namespace energymeter {
       */
     //% weight=97
     //% blockId=electrical_power_usage
-    //% block="electrical power usage"
+    //% block="electrical power usage (Watts)"
     export function getElectricalPowerUsage()
     {
+        enabled = true;
+        while (power == 0)
+            basic.pause(100);
+
         return power;
     }
 
@@ -46,6 +52,7 @@ namespace energymeter {
     //% block="electrical power on"
     export function electricalPowerOn() : boolean
     {
+        enabled = true;
         return onState;
     }
 
@@ -57,6 +64,7 @@ namespace energymeter {
     //% block="enable|data tracing %e"
     export function enableDataTrace(e: boolean)
     {
+        enabled = true;
         dataTrace = e;
     }
 
@@ -67,6 +75,7 @@ namespace energymeter {
     //% blockId=on_electrical_power_on
     //% block="on electrical power turned on"
     export function onPowerOn(handler: () => void) {
+        enabled = true;
         onPowerOnHandler = handler;
     }
 
@@ -77,60 +86,64 @@ namespace energymeter {
     //% blockId=on_electrical_power_off
     //% block="on electrical power turned off"
     export function onPowerOff(handler: () => void) {
+        enabled = true;
         onPowerOffHandler = handler;
     }
 
     // Periodic function to reord changes in magnetometer data
     basic.forever(function () {
-	    let s = input.magneticForce(Dimension.Strength);
 
-        if (min_field == 0) 
-            min_field = s;
-
-        if (max_field == 0)
-            max_field = s;
-
-        if (s < min_field)
-            min_field = s;
-        
-        if (s > max_field)
-            max_field = s;
-
-        samples++;
-
-        if (samples > 20)
+        if (enabled)
         {
-            power = (max_field - min_field) *scale;
-            samples = 0;
-            max_field = 0;
-            min_field = 0;
+            let s = input.magneticForce(Dimension.Strength);
 
-            if (power > threshold)
-            {   
-                if (!onState)
-                {
-                    onState = true;
-                    onPowerOnHandler();
-                }
-            }
+            if (min_field == 0) 
+                min_field = s;
 
-            if (power < threshold-100)
+            if (max_field == 0)
+                max_field = s;
+
+            if (s < min_field)
+                min_field = s;
+            
+            if (s > max_field)
+                max_field = s;
+
+            samples++;
+
+            if (samples > 20)
             {
-                if (onState)
-                {
-                    onState = false;
-                    onPowerOffHandler();
-                }
-            }
+                power = (max_field - min_field) *scale;
+                samples = 0;
+                max_field = 0;
+                min_field = 0;
 
-            if (dataTrace)
-            {
-                serial.writeString("POWER: ");
-                serial.writeNumber(power);
-                serial.writeString(" Watts\n");
+                if (power > threshold)
+                {   
+                    if (!onState)
+                    {
+                        onState = true;
+                        onPowerOnHandler();
+                    }
+                }
+
+                if (power < threshold-100)
+                {
+                    if (onState)
+                    {
+                        onState = false;
+                        onPowerOffHandler();
+                    }
+                }
+
+                if (dataTrace)
+                {
+                    serial.writeString("POWER: ");
+                    serial.writeNumber(power);
+                    serial.writeString(" Watts\n");
+                }
             }
         }
-
         basic.pause(100);
     })
 }
