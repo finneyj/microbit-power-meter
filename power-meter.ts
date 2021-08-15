@@ -13,6 +13,9 @@ namespace energymeter {
     let onState = false;    // true if the ME field is large enough to determine a device to be "on". False otherwise.
     let dataTrace = false;  // true if power data is being streamd to the serial port. flase otherwise. 
 
+    let onPowerOnHandler: () => void;
+    let onPowerOffHandler: () => void;
+
      /**
       * Defines the threshold at which a device is determines as "on"
       */
@@ -52,7 +55,7 @@ namespace energymeter {
     //% weight=97
     //% blockId=set_data_trace_enabled
     //% block="enable|data tracing %e"
-    function enableDataTrace(e: boolean)
+    export function enableDataTrace(e: boolean)
     {
         dataTrace = e;
     }
@@ -64,7 +67,7 @@ namespace energymeter {
     //% blockId=on_electrical_power_on
     //% block="on electrical power turned on"
     export function onPowerOn(handler: () => void) {
-        handler();
+        onPowerOnHandler = handler;
     }
 
     /**
@@ -74,7 +77,7 @@ namespace energymeter {
     //% blockId=on_electrical_power_off
     //% block="on electrical power turned off"
     export function onPowerOff(handler: () => void) {
-        handler();
+        onPowerOffHandler = handler;
     }
 
     // Event handler for compass data ready
@@ -103,15 +106,21 @@ namespace energymeter {
             min_field = 0;
 
             if (power > threshold)
-            {
-                onState = true;
-                basic.showIcon(IconNames.Yes);
+            {   
+                if (!onState)
+                {
+                    onState = true;
+                    onPowerOnHandler();
+                }
             }
 
             if (power < threshold-100)
             {
-                onState = false;
-                basic.showIcon(IconNames.No);
+                if (onState)
+                {
+                    onState = false;
+                    onPowerOffHandler();
+                }
             }
 
             if (dataTrace)
