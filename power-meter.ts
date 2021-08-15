@@ -14,8 +14,9 @@ namespace energymeter {
     let dataTrace = false;  // true if power data is being streamd to the serial port. flase otherwise. 
     let enabled = false;
 
-    let onPowerOnHandler: () => void;
-    let onPowerOffHandler: () => void;
+    function nop(){};
+    let onPowerOnHandler = nop;
+    let onPowerOffHandler = nop;
 
      /**
       * Defines the threshold at which a device is determines as "on"

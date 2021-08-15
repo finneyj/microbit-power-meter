@@ -1,6 +1,6 @@
 {
     "name": "microbit-power-meter",
-    "version": "0.0.4",
+    "version": "0.0.5",
     "description": "Enables measurement of electrical power based on local magnetic field",
     "license": "MIT",
     "dependencies": {
