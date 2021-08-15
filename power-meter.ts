@@ -80,9 +80,9 @@ namespace energymeter {
         onPowerOffHandler = handler;
     }
 
-    // Event handler for compass data ready
-    control.onEvent(6, 1, function() {
-        let s = input.magneticForce(Dimension.Strength);
+    // Periodic function to reord changes in magnetometer data
+    basic.forever(function () {
+	    let s = input.magneticForce(Dimension.Strength);
 
         if (min_field == 0) 
             min_field = s;
@@ -130,5 +130,7 @@ namespace energymeter {
                 serial.writeString(" Watts\n");
             }
         }
+
+        basic.pause(100);
     })
 }
