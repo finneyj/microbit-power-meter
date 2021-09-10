@@ -1,6 +1,6 @@
 {
     "name": "microbit-power-meter",
-    "version": "0.0.5",
+    "version": "0.0.6",
     "description": "Enables measurement of electrical power based on local magnetic field",
     "license": "MIT",
     "dependencies": {
@@ -8,6 +8,9 @@
     },
     "files": [
         "power-meter.ts",
+        "power-meter.cpp",
+        "shims.d.ts",
+        "enums.d.ts",
         "README.md",
         "tsconfig.json"
     ],
